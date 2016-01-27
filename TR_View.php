@@ -22,11 +22,10 @@ class TR_View {
 	 * @param  string  $templateName
 	 * @return TR_View
 	 */
-	public static function factory($templateName)
+	public static function factory($templateName, $args = array())
 	{
-		return new self($templateName);
 		if ( empty( self::$instances[$templateName] ) ) {
-			self::$instances[$templateName] = new self($templateName);
+			self::$instances[$templateName] = new self($templateName, $args);
 		}
 		return self::$instances[$templateName];
 	}
@@ -67,20 +66,20 @@ class TR_View {
 	}
 
 	/**
-	 * Loads a template
+	 * Loads a view
 	 * 
 	 * @param  string            $blockName
 	 * @return string
 	 * @throws TR_View_Exception
 	 */
-	public static function loadTemplate($blockName)
+	public static function loadView($blockName, $args = array())
 	{
 		if (empty(static::$loaders)) {
 			throw new TR_View_Exception('En az bir tane loader olmalı');
 		}
 
 		foreach (static::$loaders as $loader) {
-			if (is_callable($loader) && $file = $loader($blockName)) {
+			if (is_callable($loader) && $file = $loader($blockName, $args)) {
 				return $file;
 			}
 		}
@@ -96,7 +95,7 @@ class TR_View {
 	 * @return array
 	 * @throws TR_View_Exception
 	 */
-	public static function loadBlock($blockName, $context = NULL)
+	public static function loadBlock($blockName, $context = NULL, $args = array())
 	{
 		$splittedName = explode('.', $blockName);
 
@@ -118,7 +117,7 @@ class TR_View {
 			}
 		}
 
-		$build = self::factory($splittedName[0])->build;
+		$build = self::factory($splittedName[0], $args)->build;
 
 		if (count($splittedName) === 1) {
 			return $build;
@@ -146,10 +145,15 @@ class TR_View {
 	 * @var null
 	 */
 	public $build = NULL;
+	/**
+	 * @var array
+	 */
+	public $args = array();
 
-	function __construct($templateName)
+	function __construct($templateName, $args = array())
 	{
-		$this->template = self::loadTemplate($templateName);
+		$this->args = $args;
+		$this->template = self::loadView($templateName, $this->args);
 		$this->build = $this->build( $this->scan($this->template) );
 	}
 
@@ -160,19 +164,9 @@ class TR_View {
 	}
 
 
-	public function render($arguments = FALSE)
+	public function render()
 	{
-		if ($arguments === FALSE) {
-			return $this->compile();
-		}
-
-		if (is_array($arguments)) {
-			extract($arguments);
-		}
-		unset($arguments);
-		ob_start();
-		eval("?>" . $this->compile());
-		return ob_get_clean();
+		return $this->compile();
 	}
 
 	/**
@@ -423,7 +417,7 @@ class TR_View {
 	{
 		// Get parent if this build is extending another
 		if ( $child['extends'] ) {
-			$parent = TR_View::loadBlock($child['extends']);
+			$parent = TR_View::loadBlock($child['extends'], NULL, $this->args);
 		}
 
 		// Build with parent
@@ -486,7 +480,7 @@ class TR_View {
 				}
 				elseif ($build['content'][$i]['type'] === 'include')
 				{
-					$block = TR_View::loadBlock( $build['content'][$i]['name'], $build );
+					$block = TR_View::loadBlock( $build['content'][$i]['name'], $build, $this->args );
 
 					$renderedResult .= $this->compile($block);
 				}
