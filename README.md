@@ -81,7 +81,7 @@ Result:
 ***Overwriting blocks***
 
   - ">> ..." means "overwrite only ...'s blocks",
-  - ">" means (without a block name comes after >) "overwrite nearest extended block's children"
+  - ">" (without a block name comes after >) means "overwrite nearest extended block's children"
 
 childblock2.html content:
 ```html
