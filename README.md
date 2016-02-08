@@ -67,7 +67,7 @@ baseblock.html content:
 
 childblock.html content:
 ```html
-{% childblock > baseblock.html %}
+{% childblock > baseblock %}
   childblock content
   {% super.subblock1.subblock11 /%}
 {%/ childblock %}
@@ -85,7 +85,7 @@ Result:
 
 childblock2.html content:
 ```html
-{% childblock2 >> baseblock.html %}
+{% childblock2 >> baseblock %}
   childblock2 content
   {% subblock1 > %}
     {% subblock11 %}
